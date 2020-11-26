@@ -1,93 +1,128 @@
-package com.example.chatterbox.chat;
+package com.example.chatterbox.messenger;
 
-import android.content.Context;
-import android.view.LayoutInflater;
-import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.DiffUtil;
-import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.chatterbox.R;
-import com.example.chatterbox.chat.models.Message;
+import com.example.chatterbox.messenger.models.Message;
 
-import java.util.Locale;
+import java.util.ArrayList;
+import java.util.List;
 
-public class MessageAdapter extends ListAdapter<Message, MessageAdapter.MessageViewHolder> {
+import static com.example.chatterbox.messenger.models.Message.TIME_SPAN;
 
-    private MessageAdapter(@NonNull MessageDiffUtil diffCallback) {
-        super(diffCallback);
+public class MessageAdapter extends RecyclerView.Adapter<MessageViewHolder>
+        implements MessageViewHolder.OnChangeMessageListener {
+
+    public interface OnChangeMessageListener {
+        void onEditClicked(Message msg, int index);
+    }
+
+    private final String hostMACAddress;
+    private final List<Message> messages;
+
+    public final OnChangeMessageListener listener;
+
+    private MessageAdapter(String macAddress, List<Message> msgs,
+                           OnChangeMessageListener msgListener) {
+        messages = msgs;
+        hostMACAddress = macAddress;
+        listener = msgListener;
     }
 
     @NonNull
     @Override
     public MessageViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return MessageViewHolder.from(parent);
+        return MessageViewHolder.from(parent, this);
     }
 
     @Override
     public void onBindViewHolder(@NonNull MessageViewHolder holder, int position) {
-        Message message = getItem(position);
-        holder.bind(message);
+        Message message = messages.get(position);
+        holder.bind(message, hostMACAddress);
     }
 
-    static class MessageViewHolder extends RecyclerView.ViewHolder {
-
-        private TextView userTextView;
-        private TextView messageBodyTextView;
-        private TextView timeStampTextView;
-
-        private MessageViewHolder(View itemView) {
-            super(itemView);
-
-            userTextView = itemView.findViewById(R.id.user_text_view);
-            messageBodyTextView = itemView.findViewById(R.id.msg_body_text_view);
-            timeStampTextView = itemView.findViewById(R.id.timestamp_text_view);
-        }
-
-        public static MessageViewHolder from(ViewGroup parent) {
-            LayoutInflater inflater = LayoutInflater.from(parent.getContext());
-            View itemView = inflater.inflate(R.layout.msg_bubble, parent, false);
-            return new MessageViewHolder(itemView);
-        }
-
-        public void bind(Message message) {
-            Context context = itemView.getContext();
-            if (message.getUser().equals(Message.USER.SENDER))
-                itemView.setBackground(
-                        ContextCompat.getDrawable(context, R.drawable.sent_msg_bubble));
-            else
-                itemView.setBackground(
-                        ContextCompat.getDrawable(context, R.drawable.received_msg_bubble));
-
-            String userType = message.getUser().toString();
-            String capitalizedUserString = userType.charAt(0)
-                    + userType.substring(1).toLowerCase();
-            userTextView.setText(capitalizedUserString);
-            messageBodyTextView.setText(message.getMessageBody());
-            timeStampTextView.setText(String.format(Locale.getDefault(),
-                    "%d", message.getTimestamp()));
-        }
+    @Override
+    public int getItemCount() {
+        return messages.size();
     }
 
-    static class MessageDiffUtil extends DiffUtil.ItemCallback<Message> {
+    public void addMessage(Message message) {
+        ArrayList<Message> oldMessages = new ArrayList<>(messages);
+        messages.add(message);
+        // compute diffs
+        final MessageDiffCallback diffCallback = new MessageDiffCallback(oldMessages, messages);
+        final DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(diffCallback);
+
+        diffResult.dispatchUpdatesTo(this);
+    }
+
+    public void deleteMessage(Message message) {
+        if (System.currentTimeMillis() - message.getTimestamp() >= TIME_SPAN) return;
+        ArrayList<Message> oldMessages = new ArrayList<>(messages);
+        messages.remove(message);
+        // compute diffs
+        final MessageDiffCallback diffCallback = new MessageDiffCallback(oldMessages, messages);
+        final DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(diffCallback);
+
+        diffResult.dispatchUpdatesTo(this);
+    }
+
+    public void editMessage(String body, int index) {
+        Message message = messages.get(index);
+        if (System.currentTimeMillis() - message.getTimestamp() >= TIME_SPAN) return;
+        message.setMessageBody(body);
+        notifyItemChanged(index);
+    }
+
+    @Override
+    public void onEditButtonClicked(int position) {
+        listener.onEditClicked(messages.get(position), position);
+    }
+
+    @Override
+    public void onDeleteButtonClicked(int position) {
+        deleteMessage(messages.get(position));
+    }
+
+    static class MessageDiffCallback extends DiffUtil.Callback {
+
+        private final List<Message> oldList;
+        private final List<Message> newList;
+
+        public MessageDiffCallback(List<Message> oldList, List<Message> newList) {
+            this.oldList = oldList;
+            this.newList = newList;
+        }
+        @Override
+        public int getOldListSize() {
+            return oldList.size();
+        }
 
         @Override
-        public boolean areItemsTheSame(@NonNull Message oldItem, @NonNull Message newItem) {
-            return oldItem.equals(newItem);
+        public int getNewListSize() {
+            return newList.size();
         }
 
         @Override
-        public boolean areContentsTheSame(@NonNull Message oldItem, @NonNull Message newItem) {
-            return oldItem.equals(newItem);
+        public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
+            Message oldMessage = oldList.get(oldItemPosition);
+            Message newMessage = newList.get(newItemPosition);
+
+            return oldMessage.getSource().equals(newMessage.getSource()) &&
+                    oldMessage.getTimestamp() == newMessage.getTimestamp();
+        }
+
+        @Override
+        public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
+            return oldList.get(oldItemPosition).equals(newList.get(newItemPosition));
         }
     }
 
-    public static MessageAdapter getInstance() {
-        return new MessageAdapter(new MessageDiffUtil());
+    public static MessageAdapter getInstance(String macAddress, List<Message> messages,
+                                             OnChangeMessageListener listener) {
+        return new MessageAdapter(macAddress, messages, listener);
     }
 }

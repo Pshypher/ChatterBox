@@ -1,0 +1,19 @@
+<resources>
+    <string name="app_name">Chatter Box</string>
+    <string name="connected">We are connected</string>
+    <string name="connection_failed">Connection timeout or firewall problems</string>
+    <string name="disconnected">Disconnected</string>
+    <string name="disconnection_failed">Could not disconnect…</string>
+    <string name="message">Large Text</string>
+    <string name="enter">Enter</string>
+    <string name="header_prefix">Do More With</string>
+    <string name="header_suffix">Community</string>
+    <string name="join">Join any message room here!</string>
+    <string name="hint">What\'s your user ID</string>
+    <string name="join_btn_text">Join</string>
+    <string name="chat_box_hint">Type your message here</string>
+    <string name="error_string">Enter a valid user ID</string>
+    <string name="no_internet">No internet connection</string>
+    <string name="edit">Edit</string>
+    <string name="delete">Delete</string>
+</resources>

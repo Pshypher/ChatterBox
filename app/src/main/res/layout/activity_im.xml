@@ -5,41 +5,61 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".chat.ChatActivity">
+    tools:context=".messenger.IMActivity">
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/chat_recycler_view"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:paddingLeft="16dp"
-        android:paddingRight="16dp"
-        tools:listitem="@layout/chat_bubble" />
+        android:background="@android:color/white"
+        android:paddingLeft="4dp"
+        android:paddingRight="4dp"
+        android:clipToPadding="true"
+        tools:listitem="@layout/msg_bubble" />
 
     <View
         android:layout_width="match_parent"
         android:layout_height="2dp"
         android:background="@color/blue" />
 
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/msg_input_layout"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal">
 
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/msg_input_edit_text"
-            android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:background="#FFFFFF"
-            android:drawableRight="@drawable/ic_send_msg"
-            android:drawablePadding="21dp"
-            android:fontFamily="@font/lato_italic"
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/msg_input_layout"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:paddingLeft="32dp"
-            android:paddingTop="21dp"
-            android:paddingRight="21dp"
-            android:paddingBottom="21dp"
-            android:text="@string/chat_box_hint"
-            android:textColor="@color/light_gray"
-            android:textStyle="italic" />
-    </com.google.android.material.textfield.TextInputLayout>
+            app:boxStrokeWidth="0dp"
+            app:boxStrokeWidthFocused="0dp">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/msg_input_edit_text"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:background="@null"
+                android:fontFamily="@font/lato_italic"
+                android:paddingTop="22dp"
+                android:paddingRight="18dp"
+                android:paddingBottom="22dp"
+                android:text="@string/chat_box_hint"
+                android:textColor="@color/light_gray"
+                android:textStyle="italic" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <ImageButton
+            android:id="@+id/send_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:color/white"
+            android:paddingTop="22dp"
+            android:paddingRight="18dp"
+            android:paddingBottom="22dp"
+            android:src="@drawable/ic_send_msg" />
+    </LinearLayout>
 </LinearLayout>

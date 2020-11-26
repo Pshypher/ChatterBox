@@ -1,21 +1,29 @@
-package com.example.chatterbox.chat;
+package com.example.chatterbox.messenger;
 
+import android.content.Context;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Vibrator;
+import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import androidx.annotation.StringRes;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.chatterbox.R;
-import com.example.chatterbox.chat.models.Message;
-import com.example.chatterbox.entry.MainActivity;
+import com.example.chatterbox.main.MainActivity;
+import com.example.chatterbox.messenger.models.Message;
+import com.google.android.material.textfield.TextInputEditText;
 
 import org.eclipse.paho.android.service.MqttAndroidClient;
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
@@ -27,12 +35,22 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
-public class IMActivity extends AppCompatActivity {
+import java.net.NetworkInterface;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
+
+public class IMActivity extends AppCompatActivity implements MessageAdapter.OnChangeMessageListener {
 
     private String topic;
-    private MessageAdapter adapter;
-    private RecyclerView chatRecyclerView;
+    private boolean edit;
 
+    private int messageId;
+
+    private TextInputEditText msgInputEditText;
+    private MessageAdapter adapter;
 
     private MqttAndroidClient client;
     private MqttConnectOptions options;
@@ -45,17 +63,45 @@ public class IMActivity extends AppCompatActivity {
     private static final String USERNAME = "username";
     private static final String PASSWORD = "password";
 
+    private static final String TAG = "IMActivity";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_im);
 
         init();
+        connect();
+        Log.d(TAG, "onCreate: " + getMacAddress());
     }
 
     private void init() {
-        adapter = MessageAdapter.getInstance();
-        chatRecyclerView = findViewById(R.id.chat_recycler_view);
+        msgInputEditText = findViewById(R.id.msg_input_edit_text);
+        msgInputEditText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (hasFocus) {
+                    msgInputEditText.setText("");
+                    msgInputEditText.setTextColor(
+                            ContextCompat.getColor(IMActivity.this, android.R.color.black));
+                } else {
+                    if (TextUtils.isEmpty(Objects.requireNonNull(
+                            msgInputEditText.getText()).toString().trim()))
+                        msgInputEditText.setTextColor(
+                                ContextCompat.getColor(IMActivity.this, R.color.light_gray));
+                    msgInputEditText.setText(getString(R.string.chat_box_hint));
+                }
+            }
+        });
+        ImageButton sendButton = findViewById(R.id.send_button);
+        sendButton.setOnClickListener(view -> {
+            String message = Objects.requireNonNull(msgInputEditText.getText()).toString();
+            if (TextUtils.isEmpty(message)) return;
+            msgInputEditText.setText("");
+            publish(message);
+        });
+        RecyclerView chatRecyclerView = findViewById(R.id.chat_recycler_view);
+        adapter = MessageAdapter.getInstance(getMacAddress(), new ArrayList<Message>(), this);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         chatRecyclerView.setLayoutManager(layoutManager);
         chatRecyclerView.setAdapter(adapter);
@@ -89,7 +135,7 @@ public class IMActivity extends AppCompatActivity {
                 @Override
                 public void onSuccess(IMqttToken asyncActionToken) {
                     displayToast(R.string.connected);
-                    subscribe(topic);
+                    subscribe();
                 }
 
                 @Override
@@ -111,7 +157,7 @@ public class IMActivity extends AppCompatActivity {
         toast.show();
     }
 
-    public void subscribe(final String topic) {
+    public void subscribe() {
         try {
             client.subscribe(topic, 0);
         } catch (MqttException e) {
@@ -127,8 +173,9 @@ public class IMActivity extends AppCompatActivity {
             @Override
             public void messageArrived(String topic, MqttMessage message) throws Exception {
                 final int DURATION = 500;
-                // subText.setText(new String(message.getPayload()));
                 Message msg = parse(message);
+                if (msg.getSource().equals(getMacAddress())) return;
+                adapter.addMessage(msg);
                 vibrator.vibrate(DURATION);
                 ringtone.play();
             }
@@ -142,27 +189,60 @@ public class IMActivity extends AppCompatActivity {
 
     private Message parse(MqttMessage message) {
         String payload = new String(message.getPayload());
-        String[] fields = payload.split(" ");
-        Message.USER user;
-        if (fields[0].equals(Message.USER.RESPONDER)) {
-            user = Message.USER.RESPONDER;
-        } else {
-            user = Message.USER.SENDER;
-        }
-        return new Message(user, fields[1], Long.parseLong(fields[2]));
+        String[] fields = payload.split(",");
+        return new Message(fields[0], fields[1], Long.parseLong(fields[2]));
     }
 
-    public void publish() {
+    public void publish(String body) {
         if (!client.isConnected()) return;
 
-        
+        String source = getMacAddress();
+        long timestamp = System.currentTimeMillis();
 
-        String message = "Hello World!";
         try {
-            String topic = this.topic;
+            String message = String.format(Locale.getDefault(), "%s,%s,%d", source, body, timestamp);
+            if (!edit) {
+                adapter.addMessage(new Message(source, body, timestamp));
+            }
+            else adapter.editMessage(body, messageId);
+            edit = false;
             client.publish(topic, message.getBytes(), 0, false);
         } catch (MqttException e) {
             e.printStackTrace();
         }
+    }
+
+    private String getMacAddress() {
+        try {
+            List<NetworkInterface> all = Collections.list(NetworkInterface.getNetworkInterfaces());
+            for (NetworkInterface nif : all) {
+                if (!nif.getName().equalsIgnoreCase("wlan0")) continue;
+
+                byte[] macBytes = nif.getHardwareAddress();
+                if (macBytes == null) {
+                    return "";
+                }
+
+                StringBuilder res1 = new StringBuilder();
+                for (byte b : macBytes) {
+                    res1.append(String.format("%02X:", b));
+                }
+
+                if (res1.length() > 0) {
+                    res1.deleteCharAt(res1.length() - 1);
+                }
+                return res1.toString();
+            }
+        } catch (Exception ignored) {
+
+        }
+        return "02:00:00:00:00:00";
+    }
+
+    @Override
+    public void onEditClicked(Message msg, int index) {
+        edit = true;
+        messageId = index;
+        msgInputEditText.setText(msg.getMessageBody());
     }
 }
