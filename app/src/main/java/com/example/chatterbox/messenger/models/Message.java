@@ -14,7 +14,7 @@ public class Message {
     private long timestamp;
     private final CountDownTimer timer;
 
-    public static final long TIME_SPAN = 5000;
+    public static final long TIME_SPAN = 30000;
     private static final long INTERVAL = 1000;
     private CountDownListener listener;
 
