@@ -94,7 +94,6 @@ public class MessageViewHolder extends RecyclerView.ViewHolder implements Messag
         itemView.setOnLongClickListener(view -> {
             if (!user.equals(SENDER)) return false;
             if (System.currentTimeMillis() - message.getTimestamp() <= TIME_SPAN) reveal();
-            else conceal();
             return true;
         });
 
@@ -103,14 +102,19 @@ public class MessageViewHolder extends RecyclerView.ViewHolder implements Messag
     }
 
     private void setupMessageBubble(Message message, String macAddress, Context context, View bubbleLayout) {
+        LinearLayout container = itemView.findViewById(R.id.message_container);
         if (message.getSource().equals(macAddress)) {
             bubbleLayout.setBackground(
                     ContextCompat.getDrawable(context, R.drawable.sent_msg_bubble));
-            LinearLayout container = itemView.findViewById(R.id.message_container);
+
             container.setGravity(Gravity.END);
+            userTextView.setTextColor(ContextCompat.getColor(context, R.color.dark_blue));
+            messageBodyTextView.setTextColor(ContextCompat.getColor(context, android.R.color.black));
+            timeStampTextView.setTextColor(ContextCompat.getColor(context, R.color.dark_gray));
         } else {
             bubbleLayout.setBackground(
                     ContextCompat.getDrawable(context, R.drawable.received_msg_bubble));
+            container.setGravity(Gravity.START);
             userTextView.setTextColor(ContextCompat.getColor(context, android.R.color.white));
             messageBodyTextView.setTextColor(ContextCompat.getColor(context, android.R.color.white));
             timeStampTextView.setTextColor(ContextCompat.getColor(context, android.R.color.white));
@@ -119,6 +123,7 @@ public class MessageViewHolder extends RecyclerView.ViewHolder implements Messag
 
     @Override
     public void onFinished() {
-        conceal();
+        editButton.setVisibility(View.GONE);
+        deleteButton.setVisibility(View.GONE);
     }
 }
