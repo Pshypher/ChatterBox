@@ -11,6 +11,7 @@ import android.os.Vibrator;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
@@ -49,7 +50,7 @@ public class IMActivity extends AppCompatActivity implements MessageAdapter.OnCh
 
     private int messageId;
 
-    private TextInputEditText msgInputEditText;
+    private EditText msgInputEditText;
     private MessageAdapter adapter;
 
     private MqttAndroidClient client;

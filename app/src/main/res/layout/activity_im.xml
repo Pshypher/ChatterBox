@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -13,9 +12,9 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         android:background="@android:color/white"
+        android:clipToPadding="true"
         android:paddingLeft="4dp"
         android:paddingRight="4dp"
-        android:clipToPadding="true"
         tools:listitem="@layout/msg_bubble" />
 
     <View
@@ -29,34 +28,30 @@
         android:gravity="center"
         android:orientation="horizontal">
 
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/msg_input_layout"
+
+        <EditText
+            android:id="@+id/msg_input_edit_text"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:background="@null"
+            android:fontFamily="@font/lato_italic"
+            android:inputType="textMultiLine"
             android:paddingLeft="32dp"
-            app:boxStrokeWidth="0dp"
-            app:boxStrokeWidthFocused="0dp">
+            android:paddingTop="22dp"
+            android:paddingRight="18dp"
+            android:paddingBottom="22dp"
+            android:scrollHorizontally="false"
+            android:text="@string/chat_box_hint"
+            android:textColor="@color/light_gray"
+            android:textStyle="italic" />
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/msg_input_edit_text"
-                android:layout_width="match_parent"
-                android:layout_height="60dp"
-                android:background="@null"
-                android:fontFamily="@font/lato_italic"
-                android:paddingTop="22dp"
-                android:paddingRight="18dp"
-                android:paddingBottom="22dp"
-                android:text="@string/chat_box_hint"
-                android:textColor="@color/light_gray"
-                android:textStyle="italic" />
-        </com.google.android.material.textfield.TextInputLayout>
 
         <ImageButton
             android:id="@+id/send_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@android:color/white"
+            android:background="@null"
             android:paddingTop="22dp"
             android:paddingRight="18dp"
             android:paddingBottom="22dp"
