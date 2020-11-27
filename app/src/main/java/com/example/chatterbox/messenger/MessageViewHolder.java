@@ -97,6 +97,10 @@ public class MessageViewHolder extends RecyclerView.ViewHolder implements Messag
             return true;
         });
 
+        itemView.setOnClickListener(view -> {
+            conceal();
+        });
+
         message.setListener(this);
         message.startCountDown();
     }
