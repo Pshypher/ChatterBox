@@ -1,11 +1,8 @@
 package com.example.chatterbox.messenger;
 
-import android.content.Context;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
-import android.net.wifi.WifiInfo;
-import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.text.TextUtils;
@@ -24,7 +21,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.chatterbox.R;
 import com.example.chatterbox.main.MainActivity;
 import com.example.chatterbox.messenger.models.Message;
-import com.google.android.material.textfield.TextInputEditText;
 
 import org.eclipse.paho.android.service.MqttAndroidClient;
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
@@ -51,6 +47,7 @@ public class IMActivity extends AppCompatActivity implements MessageAdapter.OnCh
     private int messageId;
 
     private EditText msgInputEditText;
+    private RecyclerView messagesRecyclerView;
     private MessageAdapter adapter;
 
     private MqttAndroidClient client;
@@ -74,6 +71,12 @@ public class IMActivity extends AppCompatActivity implements MessageAdapter.OnCh
         init();
         connect();
         Log.d(TAG, "onCreate: " + getMacAddress());
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        disconnect();
     }
 
     private void init() {
@@ -101,11 +104,12 @@ public class IMActivity extends AppCompatActivity implements MessageAdapter.OnCh
             msgInputEditText.setText("");
             publish(message);
         });
-        RecyclerView chatRecyclerView = findViewById(R.id.chat_recycler_view);
+        messagesRecyclerView = findViewById(R.id.chat_recycler_view);
+
         adapter = MessageAdapter.getInstance(getMacAddress(), new ArrayList<Message>(), this);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
-        chatRecyclerView.setLayoutManager(layoutManager);
-        chatRecyclerView.setAdapter(adapter);
+        messagesRecyclerView.setLayoutManager(layoutManager);
+        messagesRecyclerView.setAdapter(adapter);
 
         if (getIntent() != null) topic = getIntent().getStringExtra(MainActivity.CHANNEL);
         if (topic == null) {
@@ -204,8 +208,9 @@ public class IMActivity extends AppCompatActivity implements MessageAdapter.OnCh
             String message = String.format(Locale.getDefault(), "%s,%s,%d", source, body, timestamp);
             if (!edit) {
                 adapter.addMessage(new Message(source, body, timestamp));
-            }
-            else adapter.editMessage(body, messageId);
+                messagesRecyclerView.scrollToPosition(adapter.getItemCount() - 1);
+
+            } else adapter.editMessage(body, messageId);
             edit = false;
             client.publish(topic, message.getBytes(), 0, false);
         } catch (MqttException e) {
@@ -235,7 +240,6 @@ public class IMActivity extends AppCompatActivity implements MessageAdapter.OnCh
                 return res1.toString();
             }
         } catch (Exception ignored) {
-
         }
         return "02:00:00:00:00:00";
     }
@@ -245,5 +249,26 @@ public class IMActivity extends AppCompatActivity implements MessageAdapter.OnCh
         edit = true;
         messageId = index;
         msgInputEditText.setText(msg.getMessageBody());
+    }
+
+    public void disconnect() {
+        if (!client.isConnected()) return;
+
+        try {
+            IMqttToken token = client.disconnect();
+            token.setActionCallback(new IMqttActionListener() {
+                @Override
+                public void onSuccess(IMqttToken asyncActionToken) {
+                    displayToast(R.string.disconnected);
+                }
+
+                @Override
+                public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
+                    displayToast(R.string.disconnection_failed);
+                }
+            });
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
     }
 }

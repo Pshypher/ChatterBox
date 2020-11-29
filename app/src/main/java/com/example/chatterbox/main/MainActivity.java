@@ -46,13 +46,6 @@ public class MainActivity extends AppCompatActivity {
                     topicEditText.setTextColor(
                             ContextCompat.getColor(MainActivity.this, android.R.color.black));
                 }
-//                else {
-//                    if (TextUtils.isEmpty(Objects.requireNonNull(
-//                            topicEditText.getText()).toString().trim()))
-//                        topicEditText.setTextColor(
-//                                ContextCompat.getColor(MainActivity.this, R.color.light_gray));
-//                        topicEditText.setText(getString(R.string.hint));
-//                }
             }
         });
         String topic = Objects.requireNonNull(topicEditText.getText()).toString().trim();
@@ -82,28 +75,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
-
-//    public void disconnect(View view) {
-//        if (!client.isConnected()) return;
-//
-//        try {
-//            IMqttToken token = client.disconnect();
-//            token.setActionCallback(new IMqttActionListener() {
-//                @Override
-//                public void onSuccess(IMqttToken asyncActionToken) {
-//                    displayToast(getString(R.string.disconnected));
-//                }
-//
-//                @Override
-//                public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
-//                    displayToast(getString(R.string.disconnection_failed));
-//
-//                }
-//            });
-//        } catch (MqttException e) {
-//            e.printStackTrace();
-//        }
-//    }
 
     private boolean isOnline() {
         ConnectivityManager cm =
