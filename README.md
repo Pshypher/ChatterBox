@@ -1,3 +1,9 @@
+*** Updates ***
+a. RecyclerView scrolls whenever a message is sent/received
+b. EditText widget vertically wraps overflowing text
+
+
+
 # ChatterBox
 A Simple chat application that uses the MQTT (Message Queuing Telemetry Transport) protocol
 
