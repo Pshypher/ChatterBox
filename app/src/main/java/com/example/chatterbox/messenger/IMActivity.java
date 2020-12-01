@@ -57,7 +57,7 @@ public class IMActivity extends AppCompatActivity implements MessageAdapter.OnCh
     private Ringtone ringtone;
     private Toast toast;
 
-    private static final String MQTT_HOST = "tcp://3.81.24.74:1883";
+    private static final String MQTT_HOST = "tcp://broker.hivemq.com:1883"; // 3.81.24.74;
     private static final String USERNAME = "username";
     private static final String PASSWORD = "password";
 
