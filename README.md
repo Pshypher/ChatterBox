@@ -1,6 +1,6 @@
 # Updates
-a. RecyclerView scrolls whenever a message is sent/received.
-b. EditText widget vertically wraps overflowing text.
+1. RecyclerView scrolls whenever a message is sent/received.
+2. EditText widget vertically wraps overflowing text.
 
 
 
@@ -16,3 +16,6 @@ would be incorporated are
    features.
 5. Use of Jetpack library components such as data-binding 
 6. Refactoring to Kotlin.
+
+# Note
+Chatter Box was designed to be used on physical devices.
