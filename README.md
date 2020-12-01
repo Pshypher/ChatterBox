@@ -1,6 +1,6 @@
-*** Updates ***
-a. RecyclerView scrolls whenever a message is sent/received
-b. EditText widget vertically wraps overflowing text
+# Updates
+a. RecyclerView scrolls whenever a message is sent/received.
+b. EditText widget vertically wraps overflowing text.
 
 
 
